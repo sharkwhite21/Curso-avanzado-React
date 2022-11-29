@@ -8,7 +8,23 @@ import Context from './Context'
 
 const client = new ApolloClient({
   uri: 'https://petgram-server-marlon-sharkwhite21.vercel.app/graphql',
-  cache: new InMemoryCache()
+  request: operation => {
+    const token = window.sessionStorage.getItem('token')
+    const authorization = token ? `Beare ${token}` : ''
+    operation.setContext({
+      headers: {
+        authorization
+      }
+    })
+  },
+  cache: new InMemoryCache(),
+  onError: error => {
+    const { networkError } = error
+    if (networkError && networkError.result.code === 'invalid_token') {
+      window.sessionStorage.removeItem('token')
+      window.location.href = '/'
+    }
+  }
 })
 
 ReactDOM.render(
